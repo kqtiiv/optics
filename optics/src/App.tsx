@@ -1,10 +1,16 @@
-import { ThemeProvider } from "@/components/theme-provider";
+import { AuroraBackground } from "@/components/ui/aurora-background";
+
+import Hero from "./components/hero";
+import { NavbarSetup } from "./components/navbar";
+import Simulations from "./components/simulation";
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      {children}
-    </ThemeProvider>
+    <AuroraBackground>
+      <NavbarSetup />
+      <Hero />
+      <Simulations />
+    </AuroraBackground>
   );
 }
 
