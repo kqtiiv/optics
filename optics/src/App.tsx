@@ -4,6 +4,7 @@ import Home from "./pages/home";
 import ReflectionOnPlaneMirror from "./pages/reflection-on-plane-mirror";
 import ImageFromThinLens from "./pages/image-from-thin-lens";
 import ConcaveSphericalMirror from "./pages/concave-spherical-mirror";
+import ConvexSphericalMirror from "./pages/convex-spherical-mirror";
 
 function App() {
   return (
@@ -17,6 +18,10 @@ function App() {
       <Route
         path="/concave-spherical-mirror"
         element={<ConcaveSphericalMirror />}
+      />
+      <Route
+        path="/convex-spherical-mirror"
+        element={<ConvexSphericalMirror />}
       />
     </Routes>
   );
