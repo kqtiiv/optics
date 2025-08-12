@@ -21,7 +21,7 @@ export default function Simulations() {
           icon={
             <Settings className="h-4 w-4 text-black dark:text-neutral-400" />
           }
-          title="Task 6+7: Real image from an idel thin lens"
+          title="Task 6+7: Image from an ideal thin lens"
           description="See the image formed from an ideal thin lens when viewed from a converging lens."
           url="/image-from-thin-lens"
         />
@@ -29,9 +29,11 @@ export default function Simulations() {
         <GridItem
           area="md:[grid-area:2/1/3/7] xl:[grid-area:1/5/3/8]"
           icon={<Lock className="h-4 w-4 text-black dark:text-neutral-400" />}
-          title="You should buy Aceternity UI Pro"
-          description="It's the best money you'll ever spend"
-          url="/"
+          title="Task 10: Anamorphic images"
+          description="Create a mapping of pixel coordinates (that are fitted into a unit circle) to a sector of a circle with 
+radius Rf, centered at the base of the object (the red star). If you place a polished cylinder over the unit 
+circle, you will create an anamorphic image. It will appear to look somewhat three dimensional."
+          url="/anamorphic-image"
         />
 
         <GridItem
@@ -39,17 +41,38 @@ export default function Simulations() {
           icon={
             <Sparkles className="h-4 w-4 text-black dark:text-neutral-400" />
           }
-          title="This card is also built by Cursor"
-          description="I'm not even kidding. Ask my mom if you don't believe me."
-          url="/"
+          title="Task 8: Real image from a spherical concave mirror"
+          description="See the image formed when it is reflected in a concave spherical mirror."
+          url="/concave-spherical-mirror"
         />
 
         <GridItem
           area="md:[grid-area:3/1/4/13] xl:[grid-area:2/8/3/13]"
           icon={<Search className="h-4 w-4 text-black dark:text-neutral-400" />}
-          title="Coming soon on Aceternity UI"
-          description="I'm writing the code as I record this, no shit."
-          url="/"
+          title="Task 9: Virtual image from a spherical convex mirror"
+          description="See the image formed when it is reflected in a convex spherical mirror."
+          url="/convex-spherical-mirror"
+        />
+      </ul>
+      <ul className="grid grid-cols-1 grid-rows-none gap-4 md:grid-cols-2 lg:gap-4 xl:max-h-[34rem]">
+        <GridItem
+          area="md:[grid-area:1/1] sm:[grid-area:2]"
+          icon={<Box className="h-4 w-4 text-black dark:text-neutral-400" />}
+          title="Task 11"
+          description="RAINBOW PHYSICS! Using Descartes' model to plot the elevation angles of primary and 
+secondary rainbows.
+"
+          url="/reflection-on-plane-mirror"
+        />
+
+        <GridItem
+          area="md:[grid-area:1/2] sm:[grid-area:2]"
+          icon={
+            <Settings className="h-4 w-4 text-black dark:text-neutral-400" />
+          }
+          title="Task 12"
+          description="A dynamic model of the path of a beam of white light through a triangular prism."
+          url="/image-from-thin-lens"
         />
       </ul>
     </div>
