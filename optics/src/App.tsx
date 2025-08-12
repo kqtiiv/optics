@@ -1,16 +1,19 @@
-import { AuroraBackground } from "@/components/ui/aurora-background";
+import { Routes, Route } from "react-router-dom";
 
-import Hero from "./components/hero";
-import { NavbarSetup } from "./components/navbar";
-import Simulations from "./components/simulation";
+import Home from "./pages/home";
+import ReflectionOnPlaneMirror from "./pages/reflection-on-plane-mirror";
+import ImageFromThinLens from "./pages/image-from-thin-lens";
 
 function App() {
   return (
-    <AuroraBackground>
-      <NavbarSetup />
-      <Hero />
-      <Simulations />
-    </AuroraBackground>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route
+        path="/reflection-on-plane-mirror"
+        element={<ReflectionOnPlaneMirror />}
+      />
+      <Route path="/image-from-thin-lens" element={<ImageFromThinLens />} />
+    </Routes>
   );
 }
 

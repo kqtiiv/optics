@@ -6,13 +6,14 @@ import { GlowingEffect } from "@/components/ui/glowing-effect";
 export default function Simulations() {
   return (
     <div className="justify-center p-10" id="simulations">
-      <h1 className="text-center mb-10">Simulations</h1>
+      <h1 className="text-center mb-10 dark:text-white">Simulations</h1>
       <ul className="grid grid-cols-1 grid-rows-none gap-4 md:grid-cols-12 md:grid-rows-3 lg:gap-4 xl:max-h-[34rem] xl:grid-rows-2">
         <GridItem
           area="md:[grid-area:1/1/2/7] xl:[grid-area:1/1/2/5]"
           icon={<Box className="h-4 w-4 text-black dark:text-neutral-400" />}
-          title="Do things the right way"
-          description="Running out of copy so I'll write anything."
+          title="Task 5: Reflection on a plane mirror"
+          description="Import your own image and watch the position of the image change"
+          url="/reflection-on-plane-mirror"
         />
 
         <GridItem
@@ -20,8 +21,9 @@ export default function Simulations() {
           icon={
             <Settings className="h-4 w-4 text-black dark:text-neutral-400" />
           }
-          title="The best AI code editor ever."
-          description="Yes, it's true. I'm not even kidding. Ask my mom if you don't believe me."
+          title="Task 6+7: Real image from an idel thin lens"
+          description="See the image formed from an ideal thin lens when viewed from a converging lens."
+          url="/image-from-thin-lens"
         />
 
         <GridItem
@@ -29,6 +31,7 @@ export default function Simulations() {
           icon={<Lock className="h-4 w-4 text-black dark:text-neutral-400" />}
           title="You should buy Aceternity UI Pro"
           description="It's the best money you'll ever spend"
+          url="/"
         />
 
         <GridItem
@@ -38,6 +41,7 @@ export default function Simulations() {
           }
           title="This card is also built by Cursor"
           description="I'm not even kidding. Ask my mom if you don't believe me."
+          url="/"
         />
 
         <GridItem
@@ -45,6 +49,7 @@ export default function Simulations() {
           icon={<Search className="h-4 w-4 text-black dark:text-neutral-400" />}
           title="Coming soon on Aceternity UI"
           description="I'm writing the code as I record this, no shit."
+          url="/"
         />
       </ul>
     </div>
