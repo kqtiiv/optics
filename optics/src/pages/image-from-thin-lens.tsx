@@ -87,7 +87,7 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
     ctx: CanvasRenderingContext2D,
     screen: (x: number, y: number) => { x: number; y: number }
   ) => {
-    const lensHeight = 2.0; // lens height in world units
+    const lensHeight = 10.0; // lens height in world units
     const halfHeight = lensHeight / 2;
     const lensWidth = 0.3; // lens thickness
     const halfWidth = lensWidth / 2;
@@ -160,8 +160,8 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
             <label className="text-white mr-2">Focal Length:</label>
             <input
               type="range"
-              min="1"
-              max="5"
+              min="5"
+              max="10"
               step="0.5"
               value={focalLength}
               onChange={(e) => setFocalLength(parseFloat(e.target.value))}
@@ -246,7 +246,7 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
           };
 
           // Draw lens at x=0
-          const lensHeight = 2.0;
+          const lensHeight = 10;
           const halfHeight = lensHeight / 2;
 
           ctx.strokeStyle = "#00aaff";
@@ -294,30 +294,6 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
           ctx.textAlign = "center";
           ctx.fillText("F", f1.x, f1.y - 10);
           ctx.fillText("F", f2.x, f2.y - 10);
-
-          // Draw focal range indicator
-          ctx.strokeStyle = "rgba(255, 255, 0, 0.3)";
-          ctx.lineWidth = 2;
-          ctx.setLineDash([5, 5]);
-          ctx.beginPath();
-          ctx.moveTo(
-            screen(focalLength, -halfHeight).x,
-            screen(focalLength, -halfHeight).y
-          );
-          ctx.lineTo(
-            screen(focalLength, halfHeight).x,
-            screen(focalLength, halfHeight).y
-          );
-          ctx.stroke();
-          ctx.setLineDash([]);
-
-          // Add label
-          ctx.fillStyle = "#ffff00";
-          ctx.fillText(
-            "Focal Range",
-            screen(focalLength, halfHeight + 0.3).x,
-            screen(focalLength, halfHeight + 0.3).y
-          );
 
           // Draw uploaded image + calculated image
           if (imageSrc) {
