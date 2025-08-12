@@ -560,9 +560,7 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
                       • Object inside focal length (x &lt; f): Virtual, upright,
                       enlarged image
                     </div>
-                    <div>
-                      • Image follows lens equations with proper magnification
-                    </div>
+
                     <div>• Virtual images appear on same side as object</div>
                   </div>
                 </div>
