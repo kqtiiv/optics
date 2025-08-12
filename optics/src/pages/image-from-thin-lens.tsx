@@ -25,8 +25,7 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
 
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [objPos, setObjPos] = useState({ x: 1.5, y: 0.5 }); // object position (must be > focal length)
-  const [focalLength, setFocalLength] = useState(0.5); // focal length (positive = convex, negative = concave)
-  const [lensType, setLensType] = useState<"convex" | "concave">("convex"); // lens type
+  const [focalLength, setFocalLength] = useState(5); // focal length
 
   const [showEquations, setShowEquations] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -67,32 +66,23 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
 
   // Calculate image position using thin lens equation
   const calculateImagePosition = (objX: number, objY: number) => {
-    if (lensType === "convex") {
-      // Convex lens behavior (positive focal length):
-      // - Object outside focal length (x > f): Real, inverted image
-      // - Object inside focal length (x < f): Virtual, upright, enlarged image
-      if (objX >= focalLength) {
-        // Real image - use standard thin lens equation
-        const imageX = (-focalLength / (objX - focalLength)) * objX;
-        const imageY = (objY / objX) * imageX;
-        return { x: imageX, y: imageY, type: "real" as const };
-      } else {
-        // Virtual image - appears on same side as object
-        const imageX = (focalLength / (focalLength - objX)) * objX;
-        const imageY = (objY / objX) * imageX;
-        return { x: imageX, y: imageY, type: "virtual" as const };
-      }
+    // Convex lens behavior:
+    // - Object outside focal length (x > f): Real, inverted image
+    // - Object inside focal length (x < f): Virtual, upright, enlarged image
+    if (objX >= focalLength) {
+      // Real image - use standard thin lens equation
+      const imageX = (-focalLength / (objX - focalLength)) * objX;
+      const imageY = (objY / objX) * imageX;
+      return { x: imageX, y: imageY, type: "real" as const };
     } else {
-      // Concave lens behavior (negative focal length):
-      // - Always forms virtual, upright, reduced images for real objects (x > 0)
-      // - Image appears on same side as object
-      const imageX = (focalLength / (objX - focalLength)) * objX;
+      // Virtual image - appears on same side as object
+      const imageX = (focalLength / (focalLength - objX)) * objX;
       const imageY = (objY / objX) * imageX;
       return { x: imageX, y: imageY, type: "virtual" as const };
     }
   };
 
-  // Create lens shape based on lens type (convex or concave)
+  // Create convex lens shape based on PhET-style lens design
   const createLensShape = (
     ctx: CanvasRenderingContext2D,
     screen: (x: number, y: number) => { x: number; y: number }
@@ -102,47 +92,25 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
     const lensWidth = 0.3; // lens thickness
     const halfWidth = lensWidth / 2;
 
+    // Create curved lens shape
     ctx.beginPath();
+    ctx.moveTo(screen(0, halfHeight).x, screen(-halfWidth, halfHeight).y);
 
-    if (lensType === "convex") {
-      // Convex lens: bulges outward
-      ctx.moveTo(screen(0, halfHeight).x, screen(-halfWidth, halfHeight).y);
+    // Left surface curve - control point extends outward to create bulge
+    ctx.quadraticCurveTo(
+      screen(-halfWidth - 0.2, 0).x,
+      screen(-halfWidth - 0.2, 0).y,
+      screen(0, -halfHeight).x,
+      screen(-halfWidth, -halfHeight).y
+    );
 
-      // Left surface curve - control point extends outward to create bulge
-      ctx.quadraticCurveTo(
-        screen(-halfWidth - 0.2, 0).x,
-        screen(-halfWidth - 0.2, 0).y,
-        screen(0, -halfHeight).x,
-        screen(-halfWidth, -halfHeight).y
-      );
-
-      // Right surface curve - control point extends outward to create bulge
-      ctx.quadraticCurveTo(
-        screen(halfWidth + 0.2, 0).x,
-        screen(halfWidth + 0.2, 0).y,
-        screen(0, halfHeight).x,
-        screen(halfWidth, halfHeight).y
-      );
-    } else {
-      // Concave lens: curves inward
-      ctx.moveTo(screen(0, halfHeight).x, screen(-halfWidth, halfHeight).y);
-
-      // Left surface curve - control point extends inward to create indentation
-      ctx.quadraticCurveTo(
-        screen(-halfWidth + 0.2, 0).x,
-        screen(-halfWidth + 0.2, 0).y,
-        screen(0, -halfHeight).x,
-        screen(-halfWidth, -halfHeight).y
-      );
-
-      // Right surface curve - control point extends inward to create indentation
-      ctx.quadraticCurveTo(
-        screen(halfWidth - 0.2, 0).x,
-        screen(halfWidth - 0.2, 0).y,
-        screen(0, halfHeight).x,
-        screen(halfWidth, halfHeight).y
-      );
-    }
+    // Right surface curve - control point extends outward to create bulge
+    ctx.quadraticCurveTo(
+      screen(halfWidth + 0.2, 0).x,
+      screen(halfWidth + 0.2, 0).y,
+      screen(0, halfHeight).x,
+      screen(halfWidth, halfHeight).y
+    );
 
     ctx.closePath();
   };
@@ -189,31 +157,12 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
           </NavigationMenuItem>
 
           <NavigationMenuItem>
-            <label className="text-white mr-2">Lens Type:</label>
-            <select
-              value={lensType}
-              onChange={(e) => {
-                setLensType(e.target.value as "convex" | "concave");
-                // Reset focal length when switching lens types
-                if (e.target.value === "convex") {
-                  setFocalLength(0.5);
-                } else {
-                  setFocalLength(-0.5);
-                }
-              }}
-              className="bg-gray-800 text-white px-2 py-1 rounded"
-            >
-              <option value="convex">Convex</option>
-              <option value="concave">Concave</option>
-            </select>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
             <label className="text-white mr-2">Focal Length:</label>
             <input
               type="range"
-              min={lensType === "convex" ? "0.5" : "-5.0"}
-              max={lensType === "convex" ? "5.0" : "-0.1"}
-              step="0.1"
+              min="1"
+              max="5"
+              step="0.5"
               value={focalLength}
               onChange={(e) => setFocalLength(parseFloat(e.target.value))}
               className="w-20"
@@ -296,7 +245,7 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
             };
           };
 
-          // Draw lens at x=0 using PhET-style lens shape
+          // Draw lens at x=0
           const lensHeight = 2.0;
           const halfHeight = lensHeight / 2;
 
@@ -319,8 +268,8 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
           ctx.setLineDash([]);
 
           // Draw focal points
-          const f1 = screen(-Math.abs(focalLength), 0);
-          const f2 = screen(Math.abs(focalLength), 0);
+          const f1 = screen(-focalLength, 0);
+          const f2 = screen(focalLength, 0);
 
           // Draw focal point indicators
           ctx.fillStyle = "#00aaff";
@@ -352,12 +301,12 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
           ctx.setLineDash([5, 5]);
           ctx.beginPath();
           ctx.moveTo(
-            screen(Math.abs(focalLength), -halfHeight).x,
-            screen(Math.abs(focalLength), -halfHeight).y
+            screen(focalLength, -halfHeight).x,
+            screen(focalLength, -halfHeight).y
           );
           ctx.lineTo(
-            screen(Math.abs(focalLength), halfHeight).x,
-            screen(Math.abs(focalLength), halfHeight).y
+            screen(focalLength, halfHeight).x,
+            screen(focalLength, halfHeight).y
           );
           ctx.stroke();
           ctx.setLineDash([]);
@@ -365,9 +314,9 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
           // Add label
           ctx.fillStyle = "#ffff00";
           ctx.fillText(
-            lensType === "convex" ? "Focal Range" : "Virtual Focus",
-            screen(Math.abs(focalLength), halfHeight + 0.3).x,
-            screen(Math.abs(focalLength), halfHeight + 0.3).y
+            "Focal Range",
+            screen(focalLength, halfHeight + 0.3).x,
+            screen(focalLength, halfHeight + 0.3).y
           );
 
           // Draw uploaded image + calculated image
@@ -377,8 +326,8 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
               imgRef.current.src = imageSrc;
             }
             const img = imgRef.current;
-            const imgW = 1;
-            const imgH = 1;
+            const imgW = 1; // Width in world coordinates
+            const imgH = 1; // Height in world coordinates
 
             // --- Draw original ---
             const topLeft = screen(objPos.x - imgW / 2, objPos.y + imgH / 2);
@@ -393,138 +342,51 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
               bottomLeft.y - topLeft.y
             );
 
-            // --- Draw warped image using true perspective transformation ---
+            // --- Draw warped image using true pixel-by-pixel mapping ---
             const imagePos = calculateImagePosition(objPos.x, objPos.y);
-            if (imagePos && img.naturalWidth > 0 && img.naturalHeight > 0) {
+            if (imagePos) {
               ctx.save();
 
-              // Create a temporary canvas for the warped image
-              const tempCanvas = document.createElement("canvas");
-              const tempCtx = tempCanvas.getContext("2d")!;
+              // Draw the warped image directly onto the main canvas
+              // This ensures each pixel maps exactly where the construction lines meet
+              const pixelResolution = 200; // Resolution for performance
 
-              // Set canvas size to accommodate the warped image
-              // For real images, ensure they form on the opposite side of the lens
-              let warpedWidth, warpedHeight;
-              if (imagePos.type === "real") {
-                // Real image: use absolute distance from lens to ensure correct positioning
-                warpedWidth = Math.abs(imagePos.x) * 2; // Width based on distance from lens
-                warpedHeight = Math.abs(imagePos.y) * 2; // Height based on distance from lens
-              } else {
-                // Virtual image: use relative distance from object
-                warpedWidth = Math.abs(imagePos.x - objPos.x) * 2;
-                warpedHeight = Math.abs(imagePos.y - objPos.y) * 2;
-              }
+              // Map each pixel of the source image through the lens equations
+              for (let y = 0; y < pixelResolution; y++) {
+                for (let x = 0; x < pixelResolution; x++) {
+                  // Convert pixel coordinates to world coordinates
+                  const worldX =
+                    objPos.x - imgW / 2 + (imgW * x) / pixelResolution;
+                  const worldY =
+                    objPos.y - imgH / 2 + (imgH * y) / pixelResolution;
 
-              tempCanvas.width = Math.max(
-                100,
-                Math.abs(warpedWidth * vp.scale)
-              );
-              tempCanvas.height = Math.max(
-                100,
-                Math.abs(warpedHeight * vp.scale)
-              );
+                  // Calculate where this specific pixel appears in image space using lens equations
+                  const warpedPos = calculateImagePosition(worldX, worldY);
 
-              // For each pixel in the destination, calculate the source pixel using lens equations
-              for (let dy = 0; dy < tempCanvas.height; dy++) {
-                for (let dx = 0; dx < tempCanvas.width; dx++) {
-                  // Convert screen coordinates back to world coordinates
-                  const worldX = imagePos.x - warpedWidth / 2 + dx / vp.scale;
-                  const worldY = imagePos.y - warpedHeight / 2 + dy / vp.scale;
+                  if (warpedPos) {
+                    // Calculate the source position in the original image
+                    const srcX = (x / pixelResolution) * img.width;
+                    const srcY = (y / pixelResolution) * img.height;
 
-                  // Find the corresponding object position that would create this image position
-                  // This is the inverse of the lens equation
-                  let sourceX, sourceY;
+                    // Calculate the size of each pixel sample
+                    const pixelSize = 4; // Fixed pixel size for clear sampling
 
-                  if (imagePos.type === "real") {
-                    // Real image: solve for source position using inverse lens equation
-                    // From X = -f/(x-f) * x, solve for x
-                    sourceX = (focalLength * worldX) / (worldX - focalLength);
-                    sourceY = (sourceX / worldX) * worldY;
-                  } else {
-                    // Virtual image: solve for source position using inverse virtual equation
-                    // From X = f/(f-x) * x, solve for x
-                    sourceX = (focalLength * worldX) / (worldX + focalLength);
-                    sourceY = (sourceX / worldX) * worldY;
-                  }
+                    // Draw this pixel directly at its warped screen position
+                    const warpedScreen = screen(warpedPos.x, warpedPos.y);
 
-                  // Convert source world coordinates to source image coordinates
-                  const sourceImgX =
-                    ((sourceX - (objPos.x - imgW / 2)) / imgW) *
-                    img.naturalWidth;
-                  const sourceImgY =
-                    ((sourceY - (objPos.y - imgH / 2)) / imgH) *
-                    img.naturalHeight;
-
-                  // Get the color from the source image
-                  if (
-                    sourceImgX >= 0 &&
-                    sourceImgX < img.naturalWidth &&
-                    sourceImgY >= 0 &&
-                    sourceImgY < img.naturalHeight
-                  ) {
-                    // Create a small canvas to get the pixel color
-                    const pixelCanvas = document.createElement("canvas");
-                    const pixelCtx = pixelCanvas.getContext("2d")!;
-                    pixelCanvas.width = 1;
-                    pixelCanvas.height = 1;
-
-                    pixelCtx.drawImage(
+                    ctx.drawImage(
                       img,
-                      Math.floor(sourceImgX),
-                      Math.floor(sourceImgY),
-                      1,
-                      1,
-                      0,
-                      0,
-                      1,
-                      1
+                      srcX,
+                      srcY,
+                      pixelSize,
+                      pixelSize,
+                      warpedScreen.x - pixelSize / 2,
+                      warpedScreen.y - pixelSize / 2,
+                      pixelSize,
+                      pixelSize
                     );
-
-                    const pixelData = pixelCtx.getImageData(0, 0, 1, 1);
-                    const r = pixelData.data[0];
-                    const g = pixelData.data[1];
-                    const b = pixelData.data[2];
-                    const a = pixelData.data[3];
-
-                    // Set the pixel in the destination
-                    tempCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a})`;
-                    tempCtx.fillRect(dx, dy, 1, 1);
                   }
                 }
-              }
-
-              // Draw the warped image to the main canvas
-              // Ensure real images are positioned correctly on the opposite side of the lens
-              let destX, destY;
-              if (imagePos.type === "real") {
-                // Real image: position centered at the calculated image position
-                destX = screen(
-                  imagePos.x - warpedWidth / 2,
-                  imagePos.y + warpedHeight / 2
-                ).x;
-                destY = screen(
-                  imagePos.x - warpedWidth / 2,
-                  imagePos.y + warpedHeight / 2
-                ).y;
-              } else {
-                // Virtual image: position relative to the image position
-                destX = screen(
-                  imagePos.x - warpedWidth / 2,
-                  imagePos.y + warpedHeight / 2
-                ).x;
-                destY = screen(
-                  imagePos.x - warpedWidth / 2,
-                  imagePos.y + warpedHeight / 2
-                ).y;
-              }
-
-              // For real images, flip vertically (inverted)
-              if (imagePos.type === "real") {
-                ctx.scale(1, -1);
-                ctx.translate(0, -destY);
-                ctx.drawImage(tempCanvas, destX, 0);
-              } else {
-                ctx.drawImage(tempCanvas, destX, destY);
               }
 
               ctx.restore();
@@ -536,88 +398,46 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
               ctx.lineWidth = 3;
               ctx.setLineDash([8, 4]);
 
-              if (imagePos.type === "real") {
-                // Real image rays
-                // Ray 1: Parallel to axis, through lens, then through focus to image
-                const ray1Start = screen(objPos.x, objPos.y);
-                const ray1Lens = screen(0, objPos.y); // Where ray hits lens
-                const ray1End = screen(imagePos.x, imagePos.y); // Through image
-                ctx.beginPath();
-                ctx.moveTo(ray1Start.x, ray1Start.y);
-                ctx.lineTo(ray1Lens.x, ray1Lens.y);
-                ctx.lineTo(ray1End.x, ray1End.y);
-                ctx.stroke();
+              // Ray 1: Parallel to axis, through lens, then through focus to image
+              const ray1Start = screen(objPos.x, objPos.y);
+              const ray1Lens = screen(0, objPos.y); // Where ray hits lens
+              const ray1End = screen(imagePos.x, imagePos.y); // Through image
+              ctx.beginPath();
+              ctx.moveTo(ray1Start.x, ray1Start.y);
+              ctx.lineTo(ray1Lens.x, ray1Lens.y);
+              ctx.lineTo(ray1End.x, ray1End.y);
+              ctx.stroke();
 
-                // Ray 2: Through center of lens (no refraction)
-                const ray2Start = screen(objPos.x, objPos.y);
-                const ray2End = screen(imagePos.x, imagePos.y);
-                ctx.beginPath();
-                ctx.moveTo(ray2Start.x, ray2Start.y);
-                ctx.lineTo(ray2End.x, ray2End.y);
-                ctx.stroke();
+              // Ray 2: Through center of lens (no refraction)
+              const ray2Start = screen(objPos.x, objPos.y);
+              const ray2End = screen(imagePos.x, imagePos.y);
+              ctx.beginPath();
+              ctx.moveTo(ray2Start.x, ray2Start.y);
+              ctx.lineTo(ray2End.x, ray2End.y);
+              ctx.stroke();
 
-                // Ray 3: Through focal point to lens, then parallel to image
-                const ray3Start = screen(objPos.x, objPos.y);
-                const ray3Lens = screen(0, objPos.y); // Where ray hits lens
-                const ray3End = screen(imagePos.x, imagePos.y); // Parallel to axis through image
-                ctx.beginPath();
-                ctx.moveTo(ray3Start.x, ray3Start.y);
-                ctx.lineTo(ray3Lens.x, ray3Lens.y);
-                ctx.lineTo(ray3End.x, ray3End.y);
-                ctx.stroke();
-              } else {
-                // Virtual image rays - show how rays appear to diverge from behind lens
-                // Ray 1: Parallel to axis, through lens, then appears to come from focal point
-                const ray1Start = screen(objPos.x, objPos.y);
-                const ray1Lens = screen(0, objPos.y); // Where ray hits lens
-                const ray1End = screen(imagePos.x, imagePos.y); // Virtual image position
-                ctx.beginPath();
-                ctx.moveTo(ray1Start.x, ray1Start.y);
-                ctx.lineTo(ray1Lens.x, ray1Lens.y);
-                ctx.lineTo(ray1End.x, ray1End.y);
-                ctx.stroke();
+              // Ray 3: Through focal point to lens, then parallel to image
+              const ray3Start = screen(objPos.x, objPos.y);
+              const ray3Lens = screen(0, objPos.y); // Where ray hits lens
+              const ray3End = screen(imagePos.x, imagePos.y); // Parallel to axis through image
+              ctx.beginPath();
+              ctx.moveTo(ray3Start.x, ray3Start.y);
+              ctx.lineTo(ray3Lens.x, ray3Lens.y);
+              ctx.lineTo(ray3End.x, ray3End.y);
+              ctx.stroke();
 
-                // Ray 2: Through center of lens (no refraction), appears to go straight through
-                const ray2Start = screen(objPos.x, objPos.y);
-                const ray2End = screen(imagePos.x, imagePos.y);
-                ctx.beginPath();
-                ctx.moveTo(ray2Start.x, ray2Start.y);
-                ctx.lineTo(ray2End.x, ray2End.y);
-                ctx.stroke();
-
-                // Ray 3: Through focal point to lens, then appears parallel to axis
-                const ray3Start = screen(objPos.x, objPos.y);
-                const ray3Lens = screen(0, objPos.y); // Where ray hits lens
-                const ray3End = screen(imagePos.x, imagePos.y); // Virtual image position
-                ctx.beginPath();
-                ctx.moveTo(ray3Start.x, ray3Start.y);
-                ctx.lineTo(ray3Lens.x, ray3Lens.y);
-                ctx.lineTo(ray3End.x, ray3End.y);
-                ctx.stroke();
-
-                // Draw dashed extensions to show where rays appear to originate
+              // For virtual images, extend rays through the opposite focal point to show virtual image location
+              if (imagePos.type === "virtual") {
+                // Extend ray 2 through the right focal point (f2) to show virtual image
+                const leftFocalPoint = screen(-focalLength, 0);
+                const origin = screen(0, 0);
                 ctx.strokeStyle = "#ff8888";
                 ctx.setLineDash([4, 4]);
-
-                // Extend ray 1 backward to show it appears to come from focal point
-                const virtualRay1Start = screen(-focalLength, imagePos.y);
                 ctx.beginPath();
-                ctx.moveTo(ray1End.x, ray1End.y);
-                ctx.lineTo(virtualRay1Start.x, virtualRay1Start.y);
-                ctx.stroke();
-
-                // Extend ray 2 backward to show it appears to go straight through
-                const virtualRay2Start = screen(imagePos.x * 2, imagePos.y);
-                ctx.beginPath();
-                ctx.moveTo(ray2End.x, ray2End.y);
-                ctx.lineTo(virtualRay2Start.x, virtualRay2Start.y);
-                ctx.stroke();
-
-                // Extend ray 3 backward to show it appears parallel to axis
-                const virtualRay3Start = screen(imagePos.x * 2, imagePos.y);
-                ctx.beginPath();
-                ctx.moveTo(ray3End.x, ray3End.y);
-                ctx.lineTo(virtualRay3Start.x, virtualRay3Start.y);
+                ctx.moveTo(ray3Lens.x, ray3Lens.y);
+                ctx.lineTo(leftFocalPoint.x, leftFocalPoint.y);
+                ctx.moveTo(ray1Start.x, ray1Start.y);
+                ctx.lineTo(origin.x, origin.y);
                 ctx.stroke();
 
                 // Reset line style
@@ -731,32 +551,14 @@ const ThinLensSimulation: React.FC<ThinLensSimulationProps> = () => {
                       only if 0 &lt; x &lt; f
                     </div>
                   </div>
-                  <div className="rounded-lg border border-gray-600 p-3 bg-gray-50 dark:bg-gray-900">
-                    <div className="font-bold text-black dark:text-white">
-                      Concave Lens (f &lt; 0):
-                    </div>
-                    <div className="text-center text-black dark:text-white">
-                      X = f / (x - f) × x
-                    </div>
-                    <div className="text-center text-black dark:text-white">
-                      Y = y / x × X
-                    </div>
-                    <div className="text-xs mt-1 text-red-600 dark:text-red-400">
-                      Always virtual, upright, reduced
-                    </div>
-                  </div>
                   <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                     <div>
-                      • <strong>Convex lens:</strong> Object outside focal
-                      length (x &gt; f): Real, inverted image
+                      • Object outside focal length (x &gt; f): Real, inverted
+                      image
                     </div>
                     <div>
-                      • <strong>Convex lens:</strong> Object inside focal length
-                      (x &lt; f): Virtual, upright, enlarged image
-                    </div>
-                    <div>
-                      • <strong>Concave lens:</strong> Always forms virtual,
-                      upright, reduced images
+                      • Object inside focal length (x &lt; f): Virtual, upright,
+                      enlarged image
                     </div>
                     <div>
                       • Image follows lens equations with proper magnification
