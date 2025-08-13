@@ -9,7 +9,33 @@ import { NavbarLogo } from "@/components/ui/resizable-navbar";
 export default function Prism() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [oddAngle, setOddAngle] = useState(60); // Default 60 degrees
-  const [lineAngle, setLineAngle] = useState(0); // Default 0 degrees (horizontal)
+  const [lineAngle, setLineAngle] = useState(0); // Default 0 degrees
+
+  const colors = [
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "blue",
+    "indigo",
+    "violet",
+  ];
+  const wavelengths = [405, 480, 510, 530, 600, 620, 680];
+
+  function crownGlass(lambda: number) {
+    const x = lambda / 1000;
+
+    // Sellmeier coefficients
+    const a = [1.03961212, 0.231792344, 1.01146945];
+    const b = [0.00600069867, 0.0200179144, 103.560653];
+
+    let y = 0;
+    for (let i = 0; i < a.length; i++) {
+      y += (a[i] * Math.pow(x, 2)) / (Math.pow(x, 2) - b[i]);
+    }
+
+    return Math.sqrt(1 + y);
+  }
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -18,105 +44,190 @@ export default function Prism() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     // Set canvas size
     canvas.width = document.documentElement.clientWidth;
     canvas.height = 400;
 
-    // Calculate triangle dimensions
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Triangle geometry
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     const height = 150;
-
-    // Convert angle to radians
     const angleRad = (oddAngle * Math.PI) / 180;
-
-    // Calculate the two equal angles (isosceles triangle)
     const equalAngle = (Math.PI - angleRad) / 2;
-
-    // Calculate triangle vertices based on the angle
-    const topX = centerX;
-    const topY = centerY - height / 2;
-
-    // Calculate base width based on angle to maintain isosceles property
     const adjustedBaseWidth = height * Math.tan(angleRad / 2) * 2;
 
+    const topX = centerX;
+    const topY = centerY - height / 2;
     const leftX = centerX - adjustedBaseWidth / 2;
     const leftY = centerY + height / 2;
-
     const rightX = centerX + adjustedBaseWidth / 2;
     const rightY = centerY + height / 2;
 
-    // Draw the triangle
+    // Draw triangle
     ctx.beginPath();
     ctx.moveTo(topX, topY);
     ctx.lineTo(leftX, leftY);
     ctx.lineTo(rightX, rightY);
     ctx.closePath();
-
-    // Fill with black
     ctx.fillStyle = "black";
     ctx.fill();
-
-    // Draw white outline
     ctx.strokeStyle = "white";
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Draw angle labels
+    // Labels
     ctx.fillStyle = "black";
     ctx.font = "16px Arial";
     ctx.textAlign = "center";
-
-    // Top angle (odd angle)
     ctx.fillText(`${oddAngle}°`, topX, topY - 20);
-
-    // Left angle
     ctx.fillText(
       `${Math.round((equalAngle * 180) / Math.PI)}°`,
       leftX - 30,
       leftY + 20
     );
-
-    // Right angle
     ctx.fillText(
       `${Math.round((equalAngle * 180) / Math.PI)}°`,
       rightX + 30,
       rightY + 20
     );
 
-    // Midpoint of left edge
+    // Line from middle of left edge
     const lineStartX = (topX + leftX) / 2;
     const lineStartY = (topY + leftY) / 2;
-
-    // Calculate end point based on angle
     const lineLength = 100;
     const lineAngleRad = (lineAngle * Math.PI) / 180;
-
-    // Calculate the angle of the left side of the triangle
     const leftSideAngle = Math.atan2(leftY - topY, leftX - topX);
-
-    // When lineAngle is 0, the line should be perpendicular to the left side
-    // Add 90 degrees (π/2 radians) to make it perpendicular
     const adjustedAngle = leftSideAngle + Math.PI / 2 + lineAngleRad;
 
     const lineEndX = lineStartX + lineLength * Math.cos(adjustedAngle);
     const lineEndY = lineStartY + lineLength * Math.sin(adjustedAngle);
 
-    // Draw the line
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(lineStartX, lineStartY);
     ctx.lineTo(lineEndX, lineEndY);
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 3;
     ctx.stroke();
 
-    // Reset stroke style for triangle outline
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 2;
-  }, [oddAngle, lineAngle]);
+    colors.forEach((color, index) => {
+      // First refraction at left edge (air to prism)
+      const nAir = 1.0;
+      const nPrism = crownGlass(wavelengths[index]);
+
+      // Calculate angle of incidence relative to normal
+      const normalAngleLeft = leftSideAngle + Math.PI / 2; // Normal pointing into prism
+      const angleOfIncidenceLeft = adjustedAngle - normalAngleLeft;
+
+      // Apply Snell's law for refraction from air to prism
+      const refractedAngleRad = Math.asin(
+        (nAir / nPrism) * Math.sin(angleOfIncidenceLeft)
+      );
+
+      // Final angle inside prism
+      const finalAngleRad = normalAngleLeft + refractedAngleRad;
+
+      // Right edge geometry
+      const rightEdgeSlope = (rightY - topY) / (rightX - topX);
+      const rightEdgeAngleRad = Math.atan2(rightY - topY, rightX - topX);
+      const rightEdgeIntercept = rightY - rightEdgeSlope * rightX;
+
+      let ix, iy; // intersection point with right edge
+
+      if (Math.abs(Math.cos(finalAngleRad)) < 1e-6) {
+        ix = lineStartX;
+        iy = rightEdgeSlope * ix + rightEdgeIntercept;
+      } else if (Math.abs(rightX - topX) < 1e-6) {
+        const beamSlope = Math.tan(finalAngleRad);
+        const beamIntercept = lineStartY - beamSlope * lineStartX;
+        ix = rightX;
+        iy = beamSlope * ix + beamIntercept;
+      } else {
+        const beamSlope = Math.tan(finalAngleRad);
+        const beamIntercept = lineStartY - beamSlope * lineStartX;
+        ix =
+          (rightEdgeIntercept - beamIntercept) / (beamSlope - rightEdgeSlope);
+        iy = beamSlope * ix + beamIntercept;
+      }
+
+      // Draw first segment (inside prism)
+      ctx.beginPath();
+      ctx.moveTo(lineStartX, lineStartY);
+      ctx.lineTo(ix, iy);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Draw normal at left edge (entry point)
+      const normalLength = 30;
+      const leftNormalEndX =
+        lineStartX + normalLength * Math.cos(normalAngleLeft);
+      const leftNormalEndY =
+        lineStartY + normalLength * Math.sin(normalAngleLeft);
+
+      const leftNormalStartX =
+        lineStartX - normalLength * Math.cos(normalAngleLeft);
+      const leftNormalStartY =
+        lineStartY - normalLength * Math.sin(normalAngleLeft);
+
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]); // Dashed line for normal
+      ctx.beginPath();
+      ctx.moveTo(leftNormalStartX, leftNormalStartY);
+      ctx.lineTo(leftNormalEndX, leftNormalEndY);
+      ctx.stroke();
+      ctx.setLineDash([]); // Reset to solid line
+
+      // ---- Second refraction ----
+      // Normal to right edge (pointing outward)
+      const normalAngleRad = rightEdgeAngleRad - Math.PI / 2;
+
+      // Snell's law: n_prism * sin(θ1) = n_air * sin(θ2)
+      const nPrismRight = crownGlass(wavelengths[index]);
+      const nAirRight = 1.0;
+
+      // Calculate angle of incidence relative to normal
+      const angleOfIncidence = finalAngleRad - normalAngleRad;
+
+      // Apply Snell's law for refraction from prism to air
+      const theta2 = Math.asin(
+        (nPrismRight / nAirRight) * Math.sin(angleOfIncidence)
+      );
+
+      // Outgoing beam angle in world coordinates
+      const outgoingAngleRad = normalAngleRad - theta2;
+
+      // Extend outgoing ray
+      const outLength = 200;
+      const ox = ix + outLength * Math.cos(outgoingAngleRad);
+      const oy = iy + outLength * Math.sin(outgoingAngleRad);
+
+      ctx.beginPath();
+      ctx.moveTo(ix, iy);
+      ctx.lineTo(ox, oy);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Draw normal at right edge (exit point)
+      const rightNormalEndX = ix + normalLength * Math.cos(normalAngleRad);
+      const rightNormalEndY = iy + normalLength * Math.sin(normalAngleRad);
+      const rightNormalStartX = ix - normalLength * Math.cos(normalAngleRad);
+      const rightNormalStartY = iy - normalLength * Math.sin(normalAngleRad);
+
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]); // Dashed line for normal
+      ctx.beginPath();
+      ctx.moveTo(rightNormalStartX, rightNormalStartY);
+      ctx.lineTo(rightNormalEndX, rightNormalEndY);
+      ctx.stroke();
+      ctx.setLineDash([]); // Reset to solid line
+    });
+  }, [oddAngle, lineAngle, colors, wavelengths]);
 
   return (
     <div>
