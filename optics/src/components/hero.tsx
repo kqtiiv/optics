@@ -15,7 +15,7 @@ export default function Hero() {
       className="flex flex-col gap-4 items-center pt-50 px-4 h-[100vh]"
     >
       <div className="text-3xl md:text-7xl font-bold dark:text-white text-center">
-        An optics simulation
+        An Optics Simulation
       </div>
       <div className="font-extralight text-base md:text-4xl dark:text-neutral-200 py-4">
         by Katie and Olin
