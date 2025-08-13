@@ -22,8 +22,11 @@ export default function AnamorphicImage() {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [objPos] = useState({ x: 0, y: 0 }); // object position - fixed behind mirror (virtual image)
   const radiusOfCurvature = 1;
+  const [circleRadius, setCircleRadius] = useState(3); // Adjustable radius R
+  const [sectorDegrees, setSectorDegrees] = useState(180); // Adjustable sector angle in degrees
 
   const [showEquations, setShowEquations] = useState(false);
+
   const imgRef = useRef<HTMLImageElement | null>(null);
 
   // Popup state for equations
@@ -45,25 +48,33 @@ export default function AnamorphicImage() {
     // console.log("file read");
   };
 
-  // Calculate image position
+  // Map each pixel to its position in the arc sector
   const calculateImagePosition = (imgX: number, imgY: number) => {
-    const R = radiusOfCurvature;
+    const baseCenter = { x: 0, y: -Math.sqrt(2) / 2 };
 
-    const alpha = 0.5 * Math.atan2(imgY, imgX);
+    // Figure out which row this pixel is in (bottom = 0, top = 1)
+    const imgH = Math.sqrt(2);
+    const rowPosition = (imgY + imgH / 2) / imgH;
 
-    const k_n = R * (imgY * Math.cos(alpha) - imgX * Math.sin(alpha));
-    const k_d = imgY - R * Math.sin(alpha);
+    // Map the row to an arc radius - bottom rows go on outer arc, top rows on inner arc
+    const innerRadius = 1;
+    const outerRadius = circleRadius;
+    const mappedR = outerRadius - rowPosition * (outerRadius - innerRadius);
 
-    // console.log(imgX, imgY, k_d);
+    // Map horizontal position to angle within the sector
+    const imgW = Math.sqrt(2);
+    const horizontalPosition = 1 - (imgX + imgW / 2) / imgW;
 
-    if (Math.abs(k_d) < 1e-12) return null;
+    // Convert to the right angle for the sector
+    const sectorSpanRad = (sectorDegrees * Math.PI) / 180;
+    const startAngle = (90 - sectorDegrees / 2) * (Math.PI / 180);
+    const mappedTheta = startAngle + horizontalPosition * sectorSpanRad;
 
-    const k = k_n / k_d;
-    const Ycalc = k * Math.sin(2 * alpha);
-    const Xcalc = k * Math.cos(2 * alpha);
-    // console.log("calculateImagePosition called:", Xcalc, Ycalc);
+    // Calculate where this pixel should go
+    const mappedX = baseCenter.x + mappedR * Math.cos(mappedTheta);
+    const mappedY = baseCenter.y + mappedR * -Math.sin(mappedTheta);
 
-    return { x: Xcalc, y: Ycalc, type: "real" };
+    return { x: mappedX, y: mappedY, type: "real" };
   };
 
   // Create convex mirror shape
@@ -126,6 +137,40 @@ export default function AnamorphicImage() {
           </NavigationMenuItem>
 
           <NavigationMenuItem>
+            <div className="flex flex-col space-y-2">
+              <label className="text-white text-sm">
+                Circle Radius R: {circleRadius}
+              </label>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                step="0.1"
+                value={circleRadius}
+                onChange={(e) => setCircleRadius(parseFloat(e.target.value))}
+                className="w-32"
+              />
+            </div>
+          </NavigationMenuItem>
+
+          <NavigationMenuItem>
+            <div className="flex flex-col space-y-2">
+              <label className="text-white text-sm">
+                Sector Degrees: {sectorDegrees}°
+              </label>
+              <input
+                type="range"
+                min="30"
+                max="360"
+                step="10"
+                value={sectorDegrees}
+                onChange={(e) => setSectorDegrees(parseInt(e.target.value))}
+                className="w-32"
+              />
+            </div>
+          </NavigationMenuItem>
+
+          <NavigationMenuItem>
             <button
               onClick={() => setShowEquations(!showEquations)}
               className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -159,6 +204,101 @@ export default function AnamorphicImage() {
 
           createMirrorShape(ctx, screen, vp);
           ctx.fill();
+          ctx.stroke();
+
+          // Draw two circles centered at (0, -√2/2)
+          const circleCenter = { x: 0, y: -Math.sqrt(2) / 2 };
+
+          // Convert degrees to radians and adjust for positive y-axis opening
+          const startAngle = (90 - sectorDegrees / 2) * (Math.PI / 180); // Start angle
+          const endAngle = (90 + sectorDegrees / 2) * (Math.PI / 180); // End angle
+
+          // Draw unit circle as a sector matching the outer arc
+          ctx.strokeStyle = "#00ff00";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([]);
+          ctx.beginPath();
+
+          // Draw the arc for unit circle
+          ctx.arc(
+            screen(circleCenter.x, circleCenter.y).x,
+            screen(circleCenter.x, circleCenter.y).y,
+            1 * vp.scale,
+            startAngle,
+            endAngle
+          );
+
+          ctx.stroke();
+
+          // Draw line connecting the opening edges of the two sectors
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 1;
+          ctx.setLineDash([]);
+          ctx.beginPath();
+
+          // Calculate the opening point of inner sector (radius 1)
+          const innerOpeningX = circleCenter.x + 1 * Math.cos(startAngle);
+          const innerOpeningY = circleCenter.y + 1 * -Math.sin(startAngle);
+
+          // Calculate the opening point of outer sector (radius R)
+          const outerOpeningX =
+            circleCenter.x + circleRadius * Math.cos(startAngle);
+          const outerOpeningY =
+            circleCenter.y + circleRadius * -Math.sin(startAngle);
+
+          // Draw line from inner to outer opening
+          ctx.moveTo(
+            screen(innerOpeningX, innerOpeningY).x,
+            screen(innerOpeningX, innerOpeningY).y
+          );
+          ctx.lineTo(
+            screen(outerOpeningX, outerOpeningY).x,
+            screen(outerOpeningX, outerOpeningY).y
+          );
+          ctx.stroke();
+
+          // Draw line connecting the closing edges of the two sectors (other side)
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 1;
+          ctx.setLineDash([]);
+          ctx.beginPath();
+
+          // Calculate the closing point of inner sector (radius 1)
+          const innerClosingX = circleCenter.x + 1 * Math.cos(endAngle);
+          const innerClosingY = circleCenter.y + 1 * -Math.sin(endAngle);
+
+          // Calculate the closing point of outer sector (radius R)
+          const outerClosingX =
+            circleCenter.x + circleRadius * Math.cos(endAngle);
+          const outerClosingY =
+            circleCenter.y + circleRadius * -Math.sin(endAngle);
+
+          // Draw line from inner to outer closing
+          ctx.moveTo(
+            screen(innerClosingX, innerClosingY).x,
+            screen(innerClosingX, innerClosingY).y
+          );
+          ctx.lineTo(
+            screen(outerClosingX, outerClosingY).x,
+            screen(outerClosingX, outerClosingY).y
+          );
+          ctx.stroke();
+
+          // Draw sector with adjustable radius R and angle
+          ctx.strokeStyle = "#ff6600";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([]);
+          ctx.beginPath();
+
+          // Draw the arc
+          ctx.arc(
+            screen(circleCenter.x, circleCenter.y).x,
+            screen(circleCenter.x, circleCenter.y).y,
+            circleRadius * vp.scale,
+            startAngle,
+            endAngle
+          );
+
           ctx.stroke();
 
           // Add mirror center line for better visibility (vertical orientation)
@@ -295,30 +435,33 @@ export default function AnamorphicImage() {
                 <div className="space-y-3">
                   <div className="rounded-lg border border-gray-600 p-3 bg-gray-50 dark:bg-gray-900">
                     <div className="font-bold text-black dark:text-white">
-                      Mirror Properties:
+                      Properties:
                     </div>
                     <div className="text-center text-black dark:text-white">
-                      R = radius of curvature
+                      R = radius of outer arc
                     </div>
                     <div className="text-center text-black dark:text-white">
-                      f = R/2 (focal length)
+                      degrees = sector angle
                     </div>
                     <div className="text-xs mt-1 text-yellow-600 dark:text-yellow-400">
-                      Center of curvature at origin
+                      Center of arc at base of the image
                     </div>
                   </div>
                   <div className="rounded-lg border border-gray-600 p-3 bg-gray-50 dark:bg-gray-900">
                     <div className="font-bold text-black dark:text-white">
-                      Image Formation:
+                      Anamorphic Projection:
                     </div>
                     <div className="text-center text-black dark:text-white">
-                      Imported image is virtual (X &lt; 0, behind mirror)
+                      If you place a polished cylinder over
                     </div>
                     <div className="text-center text-black dark:text-white">
-                      Images are upright and diminished
+                      the unit circle, you will create an
                     </div>
-                    <div className="text-xs mt-1 text-blue-600 dark:text-blue-400">
-                      Mapping creates real image in front of mirror
+                    <div className="text-center text-black dark:text-white">
+                      anamorphic image. It will appear to
+                    </div>
+                    <div className="text-center text-black dark:text-white">
+                      look somewhat three dimensional.
                     </div>
                   </div>
                 </div>
