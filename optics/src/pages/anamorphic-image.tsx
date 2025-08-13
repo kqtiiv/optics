@@ -83,15 +83,13 @@ export default function AnamorphicImage() {
     screen: (x: number, y: number) => { x: number; y: number },
     vp: { cx: number; cy: number; scale: number }
   ) => {
-    // Create convex mirror as a full circle with radius R, center at (0, √2/2)
-    // For convex mirror, the curved surface faces outward (toward positive x)
     ctx.beginPath();
     ctx.arc(
       screen(0, 0).x,
       screen(0, 0).y,
-      radiusOfCurvature * vp.scale, // Use actual radius scaled by viewport
-      0, // Start angle
-      2 * Math.PI // End angle - creates full circle
+      radiusOfCurvature * vp.scale,
+      0,
+      2 * Math.PI
     );
   };
 
@@ -116,7 +114,6 @@ export default function AnamorphicImage() {
     setIsDraggingPopup(false);
   };
 
-  // Add popup drag event listeners
   React.useEffect(() => {
     if (isDraggingPopup) {
       document.addEventListener("mousemove", handlePopupMouseMove);

@@ -313,8 +313,6 @@ const ConvexMirrorSimulation: React.FC<ConvexMirrorSimulationProps> = () => {
                   const worldY =
                     objPos.y - imgH / 2 + (imgH * y) / pixelResolution;
 
-                  // Calculate where this specific pixel appears using the convex mirror equations
-                  // This ensures the image forms exactly where the construction lines meet
                   const warpedPos = calculateImagePosition(worldX, worldY);
 
                   if (warpedPos) {
@@ -323,9 +321,8 @@ const ConvexMirrorSimulation: React.FC<ConvexMirrorSimulationProps> = () => {
                     const srcY = (y / pixelResolution) * img.height;
 
                     // Calculate the size of each pixel sample
-                    const pixelSize = 4; // Fixed pixel size for clear sampling
+                    const pixelSize = 4;
 
-                    // Draw this pixel at its calculated position from the mirror equations
                     const warpedScreen = screen(warpedPos.x, warpedPos.y);
 
                     ctx.drawImage(
@@ -358,10 +355,8 @@ const ConvexMirrorSimulation: React.FC<ConvexMirrorSimulationProps> = () => {
               ctx.lineWidth = 3;
               ctx.setLineDash([]);
 
-              // Ray 1: Parallel ray from object to mirror, then reflected
-              // This ray travels horizontally from object to mirror
               const ray1Start = screen(objPos.x, objPos.y);
-              const ray1Mirror = screen(mirrorX, mirrorY); // Where horizontal ray hits mirror
+              const ray1Mirror = screen(mirrorX, mirrorY);
 
               // Draw the horizontal incident ray
               ctx.beginPath();
@@ -369,9 +364,6 @@ const ConvexMirrorSimulation: React.FC<ConvexMirrorSimulationProps> = () => {
               ctx.lineTo(ray1Mirror.x, ray1Mirror.y);
               ctx.stroke();
 
-              // Draw the reflected ray from mirror (diverging outward)
-              // For convex mirror, reflected ray diverges away from mirror
-              // Calculate the normal vector at the reflection point
               const normalX = mirrorX - 0; // Vector from center to mirror point
               const normalY = mirrorY - 0;
               const normalLength = Math.sqrt(
@@ -384,8 +376,6 @@ const ConvexMirrorSimulation: React.FC<ConvexMirrorSimulationProps> = () => {
               const incidentX = mirrorX - objPos.x;
               const incidentY = mirrorY - objPos.y;
 
-              // Calculate reflection using the law of reflection: r = i - 2(i·n)n
-              // where r is reflected vector, i is incident vector, n is normal vector
               const dotProduct =
                 incidentX * unitNormalX + incidentY * unitNormalY;
               const reflectedX = incidentX - 2 * dotProduct * unitNormalX;
@@ -406,8 +396,6 @@ const ConvexMirrorSimulation: React.FC<ConvexMirrorSimulationProps> = () => {
               ctx.lineTo(ray1ReflectedEnd.x, ray1ReflectedEnd.y);
               ctx.stroke();
 
-              // Extend the reflected ray backwards (virtual extension) until it hits the construction line
-              // Calculate the intersection with the line from image to origin
               const extendedLength = 10; // Long enough to ensure intersection
               const ray1ExtendedEnd = screen(
                 mirrorX - (reflectedX / reflectedMagnitude) * extendedLength,
@@ -423,21 +411,19 @@ const ConvexMirrorSimulation: React.FC<ConvexMirrorSimulationProps> = () => {
               ctx.lineTo(ray1ExtendedEnd.x, ray1ExtendedEnd.y);
               ctx.stroke();
 
-              // Draw the normal at the point of reflection (from origin through reflection point)
-              // Extend the normal beyond the mirror surface for better visibility
               ctx.strokeStyle = "#00ff00"; // Green color for normal
               ctx.lineWidth = 2;
               ctx.setLineDash([4, 4]); // Dashed line for normal
 
               // Calculate normal vector from center to mirror point
-              const normalVectorX = mirrorX - 0; // Vector from center to mirror point
+              const normalVectorX = mirrorX - 0;
               const normalVectorY = mirrorY - 0;
               const normalVectorLength = Math.sqrt(
                 normalVectorX * normalVectorX + normalVectorY * normalVectorY
               );
 
               // Extend normal beyond mirror surface
-              const extendedNormalLength = 0.3; // Extension length in world coordinates
+              const extendedNormalLength = 0.3;
               const extendedNormalX =
                 mirrorX +
                 (normalVectorX / normalVectorLength) * extendedNormalLength;
@@ -453,9 +439,9 @@ const ConvexMirrorSimulation: React.FC<ConvexMirrorSimulationProps> = () => {
               ); // Extended beyond mirror
               ctx.stroke();
 
-              // Ray 2: From object through center of curvature
+              // Ray from object through center of curvature
               const ray2Start = screen(objPos.x, objPos.y);
-              const ray2Center = screen(0, 0); // Center of curvature
+              const ray2Center = screen(0, 0);
 
               // Draw the ray from object to center of curvature
               ctx.beginPath();
@@ -463,8 +449,6 @@ const ConvexMirrorSimulation: React.FC<ConvexMirrorSimulationProps> = () => {
               ctx.lineTo(ray2Center.x, ray2Center.y);
               ctx.stroke();
 
-              // Draw the normal for Ray 2 (from origin through the point where ray hits mirror)
-              // For ray through center, the normal is along the same line
               const ray2MirrorX = Math.sqrt(R * R - objPos.y * objPos.y); // Where ray hits mirror
               const ray2MirrorY = objPos.y;
 

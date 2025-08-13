@@ -49,7 +49,6 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
     reader.readAsDataURL(file);
   };
 
-  // Convert screen pixel → world coordinate
   const screenToWorld = (
     px: number,
     py: number,
@@ -68,10 +67,8 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
   const calculateImagePosition = (objX: number, objY: number) => {
     const R = radiusOfCurvature;
 
-    // Check if the point is within the mirror bounds
     if (Math.abs(objY) > R) return null; // Point outside mirror bounds
 
-    // Calculate θ_i = tan⁻¹(y_i / √(R² - x_i²))
     const denominator = Math.sqrt(R * R - objX * objX);
     if (denominator <= 0) return null; // Point outside mirror bounds
 
@@ -79,10 +76,6 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
 
     // Calculate m_i = tan(2θ_i)
     const m = Math.tan(2 * theta);
-
-    // Calculate image coordinates using the transformation equations:
-    // X_i = -(m_i * √(R² - y_i²) - y_i) / (y_i/x_i + m_i)
-    // Y_i = -(y_i * m_i * √(R² - y_i²) - y_i²) / (x_i * (y_i/x_i + m_i))
 
     const sqrtTerm = Math.sqrt(R * R - objY * objY);
     const yOverX = objY / objX;
@@ -93,7 +86,6 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
     const X = -(m * sqrtTerm - objY) / denominatorTerm;
     const Y = -(objY * m * sqrtTerm - objY * objY) / (objX * denominatorTerm);
 
-    // Determine if image is real (in front of mirror) or virtual (behind mirror)
     const type: "real" | "virtual" = X < 0 ? "real" : "virtual";
 
     return { x: X, y: Y, type };
@@ -105,18 +97,16 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
     screen: (x: number, y: number) => { x: number; y: number },
     vp: { cx: number; cy: number; scale: number }
   ) => {
-    // Create concave mirror as a semicircle with radius 5, normal at x=0 (flipped 180° from original)
     ctx.beginPath();
     ctx.arc(
       screen(0, 0).x, // Center at origin
       screen(0, 0).y,
-      radiusOfCurvature * vp.scale, // Use actual radius scaled by viewport
-      Math.PI / 2, // Start angle (top side)
-      (3 * Math.PI) / 2 // End angle (bottom side) - creates vertical semicircle flipped 180°
+      radiusOfCurvature * vp.scale,
+      Math.PI / 2,
+      (3 * Math.PI) / 2
     );
   };
 
-  // Popup drag handlers
   const handlePopupMouseDown = (e: React.MouseEvent) => {
     setIsDraggingPopup(true);
     popupDragOffset.current = {
@@ -256,7 +246,6 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
           createMirrorShape(ctx, screen, vp);
           ctx.stroke();
 
-          // Add mirror center line for better visibility (vertical orientation)
           ctx.strokeStyle = "#0066cc";
           ctx.lineWidth = 1;
           ctx.setLineDash([2, 2]);
@@ -266,7 +255,6 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
           ctx.stroke();
           ctx.setLineDash([]);
 
-          // Draw center of curvature and focal point
           const center = screen(0, 0);
           const focalPoint = screen(-radiusOfCurvature / 2, 0);
 
@@ -300,10 +288,9 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
               imgRef.current.src = imageSrc;
             }
             const img = imgRef.current;
-            const imgW = 1; // Width in world coordinates
-            const imgH = 1; // Height in world coordinates
+            const imgW = 1;
+            const imgH = 1;
 
-            // --- Draw original ---
             const topLeft = screen(objPos.x - imgW / 2, objPos.y + imgH / 2);
             const topRight = screen(objPos.x + imgW / 2, objPos.y + imgH / 2);
             const bottomLeft = screen(objPos.x - imgW / 2, objPos.y - imgH / 2);
@@ -321,20 +308,15 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
             if (imagePos) {
               ctx.save();
 
-              // Draw the warped image directly onto the main canvas
-              // This ensures each pixel maps exactly where the construction lines meet
               const pixelResolution = 200; // Resolution for performance
 
-              // Map each pixel of the source image through the mirror equations
               for (let y = 0; y < pixelResolution; y++) {
                 for (let x = 0; x < pixelResolution; x++) {
-                  // Convert pixel coordinates to world coordinates
                   const worldX =
                     objPos.x - imgW / 2 + (imgW * x) / pixelResolution;
                   const worldY =
                     objPos.y - imgH / 2 + (imgH * y) / pixelResolution;
 
-                  // Calculate where this specific pixel appears in image space using mirror equations
                   const warpedPos = calculateImagePosition(worldX, worldY);
 
                   if (warpedPos) {
@@ -342,10 +324,8 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
                     const srcX = (x / pixelResolution) * img.width;
                     const srcY = (y / pixelResolution) * img.height;
 
-                    // Calculate the size of each pixel sample
-                    const pixelSize = 4; // Fixed pixel size for clear sampling
+                    const pixelSize = 4;
 
-                    // Draw this pixel directly at its warped screen position
                     const warpedScreen = screen(warpedPos.x, warpedPos.y);
 
                     ctx.drawImage(
@@ -366,22 +346,20 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
               ctx.restore();
             }
 
-            // Draw ray tracing construction lines (only if we have an image position)
+            // Draw construction lines
             if (imagePos) {
-              // Calculate where the horizontal ray hits the mirror surface
               const R = radiusOfCurvature;
               const mirrorX = -Math.sqrt(R * R - objPos.y * objPos.y);
               const mirrorY = objPos.y;
 
-              // Main rays (solid lines, brighter color)
+              // Main rays
               ctx.strokeStyle = "#ff4444";
               ctx.lineWidth = 3;
               ctx.setLineDash([]);
 
-              // Main Ray 2: Horizontal ray from object to mirror, then reflected
               const ray2Start = screen(objPos.x, objPos.y);
               const ray2Mirror = screen(mirrorX, mirrorY); // Where horizontal ray hits mirror
-              const ray2End = screen(imagePos.x, imagePos.y); // Where reflected ray meets construction line
+              const ray2End = screen(imagePos.x, imagePos.y);
 
               // Draw the horizontal incident ray
               ctx.beginPath();
@@ -395,12 +373,11 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
               ctx.lineTo(ray2End.x, ray2End.y);
               ctx.stroke();
 
-              // Construction lines (dashed lines, dimmer color)
+              // Construction lines
               ctx.strokeStyle = "#666666";
               ctx.lineWidth = 2;
               ctx.setLineDash([8, 4]);
 
-              // Construction Line 3: From image through center of curvature to mirror
               const ray3Start = screen(imagePos.x, imagePos.y);
               const ray3Center = screen(0, 0); // Center of curvature
               const ray3Mirror = screen(mirrorX, mirrorY); // Mirror surface
@@ -452,7 +429,6 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
         }}
       />
 
-      {/* Floating Equations Popup */}
       {showEquations && (
         <div
           className="fixed max-w-sm z-[999999] cursor-move"
