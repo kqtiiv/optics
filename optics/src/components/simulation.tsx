@@ -58,11 +58,12 @@ circle, you will create an anamorphic image. It will appear to look somewhat thr
         <GridItem
           area="md:[grid-area:1/1] sm:[grid-area:2]"
           icon={<Box className="h-4 w-4 text-black dark:text-neutral-400" />}
-          title="Task 11"
-          description="RAINBOW PHYSICS! Using Descartes' model to plot the elevation angles of primary and 
-secondary rainbows.
+          title="Task 11d: Rainbows"
+          description="Model of primary and secondary rainbows 
+that you would see at sea level (with no topographic obstructions) for 
+different angles of (anti) solar elevation
 "
-          url="/reflection-on-plane-mirror"
+          url="/rainbow"
         />
 
         <GridItem
@@ -70,9 +71,9 @@ secondary rainbows.
           icon={
             <Settings className="h-4 w-4 text-black dark:text-neutral-400" />
           }
-          title="Task 12"
+          title="Task 12a: Prism"
           description="A dynamic model of the path of a beam of white light through a triangular prism."
-          url="/image-from-thin-lens"
+          url="/prism"
         />
       </ul>
     </div>

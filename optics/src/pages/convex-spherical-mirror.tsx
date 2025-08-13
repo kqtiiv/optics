@@ -68,15 +68,7 @@ const ConvexMirrorSimulation: React.FC<ConvexMirrorSimulationProps> = () => {
   const calculateImagePosition = (objX: number, objY: number) => {
     const R = radiusOfCurvature;
 
-    // Check if the point is within the mirror bounds
     if (Math.abs(objY) > R) return null; // Point outside mirror bounds
-
-    // Using the exact equations from the image:
-    // α = (1/2) × tan⁻¹(y/x)  - where α is the angle of reflection
-    // k = x / cos(2α)
-    // Y = (k × sin(α)) / ((k/R) - cos(α) + (x/y) × sin(α))
-    // X = x - (Y/y)
-
     const alpha = 0.5 * Math.atan2(objY, objX); // Angle of reflection
     const k = objX / Math.cos(2 * alpha);
 
@@ -239,8 +231,6 @@ const ConvexMirrorSimulation: React.FC<ConvexMirrorSimulationProps> = () => {
               y: ch / 2 - (y - vp.cy) * vp.scale,
             };
           };
-
-          // Draw mirror at x=0
 
           ctx.strokeStyle = "#0066cc";
           ctx.fillStyle = "rgba(0, 102, 204, 0.2)";
