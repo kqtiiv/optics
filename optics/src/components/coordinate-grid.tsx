@@ -14,8 +14,16 @@ interface CoordinateGridProps {
   renderOverlay?: (ctx: CanvasRenderingContext2D, viewport: Viewport) => void;
   className?: string;
   disablePan?: boolean;
-  onMouseDown?: (e: React.MouseEvent, viewport: Viewport, canvas: HTMLCanvasElement) => void;
-  onMouseMove?: (e: React.MouseEvent, viewport: Viewport, canvas: HTMLCanvasElement) => void;
+  onMouseDown?: (
+    e: React.MouseEvent,
+    viewport: Viewport,
+    canvas: HTMLCanvasElement
+  ) => void;
+  onMouseMove?: (
+    e: React.MouseEvent,
+    viewport: Viewport,
+    canvas: HTMLCanvasElement
+  ) => void;
   onMouseUp?: (e: React.MouseEvent) => void;
 }
 
@@ -83,10 +91,9 @@ const CoordinateGrid: React.FC<CoordinateGridProps> = ({
     const targetPx = 80;
     const raw = targetPx / scale;
     const powers = [1, 2, 5, 10];
-    let factor = 1;
     let best = powers[0];
-    let exponent = Math.floor(Math.log10(raw || 1));
-    let mantissa = raw / Math.pow(10, exponent);
+    const exponent = Math.floor(Math.log10(raw || 1));
+    const mantissa = raw / Math.pow(10, exponent);
     for (const p of powers) {
       if (mantissa <= p) {
         best = p;
@@ -253,7 +260,7 @@ const CoordinateGrid: React.FC<CoordinateGridProps> = ({
       (e.target as Element).setPointerCapture?.(e.pointerId);
       draggingRef.current = true;
       lastMouseRef.current = { x: e.clientX, y: e.clientY };
-      
+
       // Call custom mouse handler if provided
       if (onMouseDown && canvasRef.current) {
         const reactEvent = {
@@ -275,7 +282,7 @@ const CoordinateGrid: React.FC<CoordinateGridProps> = ({
         } as React.MouseEvent;
         onMouseMove(reactEvent, viewportRef.current, canvasRef.current);
       }
-      
+
       if (!draggingRef.current || !lastMouseRef.current || disablePan) return;
       const dx = e.clientX - lastMouseRef.current.x;
       const dy = e.clientY - lastMouseRef.current.y;
@@ -300,7 +307,7 @@ const CoordinateGrid: React.FC<CoordinateGridProps> = ({
         } as React.MouseEvent;
         onMouseUp(reactEvent);
       }
-      
+
       draggingRef.current = false;
       lastMouseRef.current = null;
       try {

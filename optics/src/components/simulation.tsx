@@ -84,6 +84,15 @@ different angles of (anti) solar elevation
           url="/prism"
         />
       </ul>
+      <GridItem
+        area="md:[grid-area:1/1] sm:[grid-area:2]"
+        icon={<Sparkles className="h-4 w-4 text-black dark:text-neutral-400" />}
+        title="Eye model"
+        description="A dynamic model in an  to demonstrate short and long sight (and how to 
+correct for it)
+"
+        url="/eye-model"
+      />
     </div>
   );
 }

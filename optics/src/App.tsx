@@ -8,6 +8,7 @@ import ConvexSphericalMirror from "./pages/convex-spherical-mirror";
 import AnamorphicImage from "./pages/anamorphic-image";
 import Prism from "./pages/prism";
 import Rainbow from "./pages/rainbow";
+import EyeModel from "./pages/eye-model";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
       <Route path="/anamorphic-image" element={<AnamorphicImage />} />
       <Route path="/prism" element={<Prism />} />
       <Route path="/rainbow" element={<Rainbow />} />
+      <Route path="/eye-model" element={<EyeModel />} />
     </Routes>
   );
 }
