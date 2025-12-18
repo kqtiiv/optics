@@ -261,7 +261,6 @@ const CoordinateGrid: React.FC<CoordinateGridProps> = ({
       draggingRef.current = true;
       lastMouseRef.current = { x: e.clientX, y: e.clientY };
 
-      // Call custom mouse handler if provided
       if (onMouseDown && canvasRef.current) {
         const reactEvent = {
           clientX: e.clientX,
@@ -273,7 +272,6 @@ const CoordinateGrid: React.FC<CoordinateGridProps> = ({
     };
 
     const onPointerMove = (e: PointerEvent) => {
-      // Call custom mouse handler if provided
       if (onMouseMove && canvasRef.current) {
         const reactEvent = {
           clientX: e.clientX,
@@ -298,7 +296,6 @@ const CoordinateGrid: React.FC<CoordinateGridProps> = ({
     };
 
     const onPointerUp = (e: PointerEvent) => {
-      // Call custom mouse handler if provided
       if (onMouseUp && canvasRef.current) {
         const reactEvent = {
           clientX: e.clientX,
