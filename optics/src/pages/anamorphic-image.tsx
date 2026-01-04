@@ -22,19 +22,19 @@ export default function AnamorphicImage() {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [objPos] = useState({ x: 0, y: 0 }); // object position - fixed behind mirror (virtual image)
   const radiusOfCurvature = 1;
-  const [circleRadius, setCircleRadius] = useState(3); // Adjustable radius R
-  const [sectorDegrees, setSectorDegrees] = useState(180); // Adjustable sector angle in degrees
+  const [circleRadius, setCircleRadius] = useState(3); // adjustable radius R
+  const [sectorDegrees, setSectorDegrees] = useState(180); // adjustable sector angle in degrees
 
   const [showEquations, setShowEquations] = useState(false);
 
   const imgRef = useRef<HTMLImageElement | null>(null);
 
-  // Popup state for equations
+  // popup state
   const [isDraggingPopup, setIsDraggingPopup] = useState(false);
   const [popupPos, setPopupPos] = useState({ x: 100, y: 100 });
   const popupDragOffset = useRef({ x: 0, y: 0 });
 
-  // Handle file upload
+  // handle file upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -48,36 +48,36 @@ export default function AnamorphicImage() {
     // console.log("file read");
   };
 
-  // Map each pixel to its position in the arc sector
+  // map each pixel to its position in the arc sector
   const calculateImagePosition = (imgX: number, imgY: number) => {
     const baseCenter = { x: 0, y: -Math.sqrt(2) / 2 };
 
-    // Figure out which row this pixel is in (bottom = 0, top = 1)
+    // figure out which row this pixel is in (bottom = 0, top = 1)
     const imgH = Math.sqrt(2);
     const rowPosition = (imgY + imgH / 2) / imgH;
 
-    // Map the row to an arc radius - bottom rows go on outer arc, top rows on inner arc
+    // map the row to an arc radius - bottom rows go on outer arc, top rows on inner arc
     const innerRadius = 1;
     const outerRadius = circleRadius;
     const mappedR = outerRadius - rowPosition * (outerRadius - innerRadius);
 
-    // Map horizontal position to angle within the sector
+    // map horizontal position to angle within the sector
     const imgW = Math.sqrt(2);
     const horizontalPosition = 1 - (imgX + imgW / 2) / imgW;
 
-    // Convert to the right angle for the sector
+    // convert to the right angle for the sector
     const sectorSpanRad = (sectorDegrees * Math.PI) / 180;
     const startAngle = (90 - sectorDegrees / 2) * (Math.PI / 180);
     const mappedTheta = startAngle + horizontalPosition * sectorSpanRad;
 
-    // Calculate where this pixel should go
+    // calculate where this pixel should go
     const mappedX = baseCenter.x + mappedR * Math.cos(mappedTheta);
     const mappedY = baseCenter.y + mappedR * -Math.sin(mappedTheta);
 
     return { x: mappedX, y: mappedY, type: "real" };
   };
 
-  // Create convex mirror shape
+  // create convex mirror shape
   const createMirrorShape = (
     ctx: CanvasRenderingContext2D,
     screen: (x: number, y: number) => { x: number; y: number },
@@ -93,7 +93,7 @@ export default function AnamorphicImage() {
     );
   };
 
-  // Popup drag handlers
+  // popup drag handlers
   const handlePopupMouseDown = (e: React.MouseEvent) => {
     setIsDraggingPopup(true);
     popupDragOffset.current = {
