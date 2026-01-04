@@ -152,7 +152,7 @@ export default function Prism() {
         iy = beamSlope * ix + beamIntercept;
       }
 
-      // Draw first segment (inside prism)
+      // Draw segment inside prism
       ctx.beginPath();
       ctx.moveTo(lineStartX, lineStartY);
       ctx.lineTo(ix, iy);
@@ -160,7 +160,7 @@ export default function Prism() {
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Draw normal at left edge (entry point)
+      // Draw normal at left edge
       const normalLength = 30;
       const leftNormalEndX =
         lineStartX + normalLength * Math.cos(normalAngleLeft);
@@ -182,25 +182,25 @@ export default function Prism() {
       ctx.setLineDash([]); // Reset to solid line
 
       // ---- Second refraction ----
-      // Normal to right edge (pointing outward)
+      // Normal
       const normalAngleRad = rightEdgeAngleRad - Math.PI / 2;
 
       // Snell's law: n_prism * sin(θ1) = n_air * sin(θ2)
       const nPrismRight = crownGlass(wavelengths[index]);
       const nAirRight = 1.0;
 
-      // Calculate angle of incidence relative to normal
+      // Calculate angle of incidence 
       const angleOfIncidence = finalAngleRad - normalAngleRad;
 
-      // Apply Snell's law for refraction from prism to air
+      // Apply Snell's law from prism to air
       const theta2 = Math.asin(
         (nPrismRight / nAirRight) * Math.sin(angleOfIncidence)
       );
 
-      // Outgoing beam angle in world coordinates
+      // beam angle in world coordinates
       const outgoingAngleRad = normalAngleRad - theta2;
 
-      // Extend outgoing ray
+      // extend outgoing ray
       const outLength = 200;
       const ox = ix + outLength * Math.cos(outgoingAngleRad);
       const oy = iy + outLength * Math.sin(outgoingAngleRad);
@@ -212,7 +212,7 @@ export default function Prism() {
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Draw normal at right edge (exit point)
+      // draw normal
       const rightNormalEndX = ix + normalLength * Math.cos(normalAngleRad);
       const rightNormalEndY = iy + normalLength * Math.sin(normalAngleRad);
       const rightNormalStartX = ix - normalLength * Math.cos(normalAngleRad);
