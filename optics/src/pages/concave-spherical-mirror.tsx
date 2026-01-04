@@ -32,12 +32,12 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
   const dragOffset = useRef({ x: 0, y: 0 });
   const imgRef = useRef<HTMLImageElement | null>(null);
 
-  // Popup state for equations
+  // popup state 
   const [isDraggingPopup, setIsDraggingPopup] = useState(false);
   const [popupPos, setPopupPos] = useState({ x: 100, y: 100 });
   const popupDragOffset = useRef({ x: 0, y: 0 });
 
-  // Handle file upload
+  // handle file upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -63,25 +63,25 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
     };
   };
 
-  // Calculate image position using the exact concave mirror equations
+  // calculate image position using the exact concave mirror equations
   const calculateImagePosition = (objX: number, objY: number) => {
     const R = radiusOfCurvature;
 
-    if (Math.abs(objY) > R) return null; // Point outside mirror bounds
+    if (Math.abs(objY) > R) return null; // point outside mirror bounds
 
     const denominator = Math.sqrt(R * R - objX * objX);
-    if (denominator <= 0) return null; // Point outside mirror bounds
+    if (denominator <= 0) return null; // point outside mirror bounds
 
     const theta = Math.atan2(objY, denominator);
 
-    // Calculate m_i = tan(2θ_i)
+    // calculate m_i = tan(2θ_i)
     const m = Math.tan(2 * theta);
 
     const sqrtTerm = Math.sqrt(R * R - objY * objY);
     const yOverX = objY / objX;
     const denominatorTerm = yOverX + m;
 
-    if (Math.abs(denominatorTerm) < 1e-10) return null; // Avoid division by zero
+    if (Math.abs(denominatorTerm) < 1e-10) return null; // avoid division by zero
 
     const X = -(m * sqrtTerm - objY) / denominatorTerm;
     const Y = -(objY * m * sqrtTerm - objY * objY) / (objX * denominatorTerm);
@@ -91,7 +91,7 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
     return { x: X, y: Y, type };
   };
 
-  // Create concave mirror shape
+  // create concave mirror shape
   const createMirrorShape = (
     ctx: CanvasRenderingContext2D,
     screen: (x: number, y: number) => { x: number; y: number },
@@ -99,7 +99,7 @@ const ConcaveMirrorSimulation: React.FC<ConcaveMirrorSimulationProps> = () => {
   ) => {
     ctx.beginPath();
     ctx.arc(
-      screen(0, 0).x, // Center at origin
+      screen(0, 0).x, // center at origin
       screen(0, 0).y,
       radiusOfCurvature * vp.scale,
       Math.PI / 2,
