@@ -32,12 +32,12 @@ const ConvexMirrorSimulation: React.FC<ConvexMirrorSimulationProps> = () => {
   const dragOffset = useRef({ x: 0, y: 0 });
   const imgRef = useRef<HTMLImageElement | null>(null);
 
-  // Popup state for equations
+  // popup state 
   const [isDraggingPopup, setIsDraggingPopup] = useState(false);
   const [popupPos, setPopupPos] = useState({ x: 100, y: 100 });
   const popupDragOffset = useRef({ x: 0, y: 0 });
 
-  // Handle file upload
+  // handle file upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -49,7 +49,7 @@ const ConvexMirrorSimulation: React.FC<ConvexMirrorSimulationProps> = () => {
     reader.readAsDataURL(file);
   };
 
-  // Convert screen pixel → world coordinate
+  // convert screen pixel → world coordinate
   const screenToWorld = (
     px: number,
     py: number,
@@ -64,46 +64,46 @@ const ConvexMirrorSimulation: React.FC<ConvexMirrorSimulationProps> = () => {
     };
   };
 
-  // Calculate image position using convex mirror equations from the image
+  // calculate image position using convex mirror equations from the image
   const calculateImagePosition = (objX: number, objY: number) => {
     const R = radiusOfCurvature;
 
-    if (Math.abs(objY) > R) return null; // Point outside mirror bounds
-    const alpha = 0.5 * Math.atan2(objY, objX); // Angle of reflection
+    if (Math.abs(objY) > R) return null; // point outside mirror bounds
+    const alpha = 0.5 * Math.atan2(objY, objX); // angle of reflection
     const k = objX / Math.cos(2 * alpha);
 
     const numerator = k * Math.sin(alpha);
     const denominator =
       k / R - Math.cos(alpha) + (objX / objY) * Math.sin(alpha);
 
-    if (Math.abs(denominator) < 1e-10) return null; // Avoid division by zero
+    if (Math.abs(denominator) < 1e-10) return null; // avoid division by zero
 
     const Y = numerator / denominator;
-    const X = (objX * Y) / objY; // Exact formula from image: X = x - (Y/y)
+    const X = (objX * Y) / objY; // exact formula from image: X = x - (Y/y)
 
-    // For convex mirrors, all images are virtual (behind mirror)
+    // for convex mirrors, all images are virtual (behind mirror)
     return { x: X, y: Y, type: "virtual" };
   };
 
-  // Create convex mirror shape
+  // create convex mirror shape
   const createMirrorShape = (
     ctx: CanvasRenderingContext2D,
     screen: (x: number, y: number) => { x: number; y: number },
     vp: { cx: number; cy: number; scale: number }
   ) => {
-    // Create convex mirror as a semicircle with radius 5, normal at x=0
-    // For convex mirror, the curved surface faces outward (toward positive x)
+    // create convex mirror as a semicircle with radius 5, normal at x=0
+    // for convex mirror, the curved surface faces outward (toward positive x)
     ctx.beginPath();
     ctx.arc(
-      screen(0, 0).x, // Center at origin
+      screen(0, 0).x, // center at origin
       screen(0, 0).y,
-      radiusOfCurvature * vp.scale, // Use actual radius scaled by viewport
-      -Math.PI / 2, // Start angle (top side)
-      Math.PI / 2 // End angle (bottom side) - creates vertical semicircle curved outward
+      radiusOfCurvature * vp.scale, // use actual radius scaled by viewport
+      -Math.PI / 2, // start angle (top side)
+      Math.PI / 2 // end angle (bottom side) - creates vertical semicircle curved outward
     );
   };
 
-  // Popup drag handlers
+  // popup drag handlers
   const handlePopupMouseDown = (e: React.MouseEvent) => {
     setIsDraggingPopup(true);
     popupDragOffset.current = {
@@ -124,7 +124,7 @@ const ConvexMirrorSimulation: React.FC<ConvexMirrorSimulationProps> = () => {
     setIsDraggingPopup(false);
   };
 
-  // Add popup drag event listeners
+  // add popup drag event listeners
   React.useEffect(() => {
     if (isDraggingPopup) {
       document.addEventListener("mousemove", handlePopupMouseMove);
