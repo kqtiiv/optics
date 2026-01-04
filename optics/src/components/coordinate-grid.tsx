@@ -242,7 +242,7 @@ const CoordinateGrid: React.FC<CoordinateGridProps> = ({
     }
   }, [renderOverlay]);
 
-  // initialize resize and listeners
+  // initialise resize and listeners
   useEffect(() => {
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
@@ -251,7 +251,7 @@ const CoordinateGrid: React.FC<CoordinateGridProps> = ({
     };
   }, [resizeCanvas]);
 
-  // pointer interactions (pan & zoom)
+  // pan & zoom
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
